@@ -79,18 +79,65 @@ else
 
     preConfigure = ''
       ${xcodeUtils.mkIOSBuildEnv { inherit simulator; }}
+      export IOS_SDK="$SDKROOT"
       export NIX_CFLAGS_COMPILE=""
       export NIX_CXXFLAGS_COMPILE=""
       export NIX_LDFLAGS=""
       ${deploymentTargetEnv}
-      export RUSTFLAGS="-A warnings -C linker=$XCODE_CLANG -C link-arg=-isysroot -C link-arg=$SDKROOT -C link-arg=$APPLE_DEPLOYMENT_FLAG $RUSTFLAGS"
+
+      # Target linker via .cargo/config + CARGO_TARGET_* (not global RUSTFLAGS alone),
+      # matching wwn-waypipe / wwn-niri so host proc-macros stay on macOS.
+      mkdir -p .cargo
+      cat > .cargo/config.toml <<CARGO_EOF
+[target.${cargoTarget}]
+linker = "$XCODE_CLANG"
+rustflags = [
+  "-C", "linker=$XCODE_CLANG",
+  "-C", "link-arg=-arch", "-C", "link-arg=$IOS_ARCH",
+  "-C", "link-arg=-isysroot", "-C", "link-arg=$IOS_SDK",
+  "-C", "link-arg=$APPLE_DEPLOYMENT_FLAG"
+]
+CARGO_EOF
+      export RUSTFLAGS="-A warnings $RUSTFLAGS"
       target_underscore=$(echo "${cargoTarget}" | tr '-' '_')
       export "CC_''${target_underscore}"="$XCODE_CLANG"
       export "CXX_''${target_underscore}"="$XCODE_CLANGXX"
       export "AR_''${target_underscore}"="ar"
       export "CARGO_TARGET_''${target_underscore^^}_LINKER"="$XCODE_CLANG"
-      export MACOS_SDK=$(xcrun --sdk macosx --show-sdk-path 2>/dev/null || true)
+
+      # wasmtime depends on mach2 for all target_vendor=apple, but mach2 0.4.3
+      # only allows target_os macos|ios. Extend to tvOS/visionOS (watch is
+      # size-gated off above). Same vendor-edit pattern as niri's wayland-backend.
+      vendor_dir="$NIX_BUILD_TOP/cargo-vendor-dir"
+      apple_os_cfg='any(target_os = "macos", target_os = "ios", target_os = "tvos", target_os = "visionos", target_os = "watchos")'
+      mach2_found=0
+      for m2 in "$vendor_dir"/mach2-*/src/lib.rs; do
+        if [ -f "$m2" ]; then
+          sed -i \
+            's/any(target_os = "macos", target_os = "ios")/'"$apple_os_cfg"'/g' \
+            "$m2"
+          mach2_found=1
+        fi
+      done
+      for m2toml in "$vendor_dir"/mach2-*/Cargo.toml; do
+        if [ -f "$m2toml" ]; then
+          sed -i \
+            's/any(target_os = "macos", target_os = "ios")/'"$apple_os_cfg"'/g' \
+            "$m2toml"
+        fi
+      done
+      if [ "$mach2_found" != 1 ]; then
+        echo "ERROR: vendored mach2 not found under $vendor_dir" >&2
+        exit 1
+      fi
+      echo "Patched vendored mach2 cfgs for Apple mobile (tvOS/visionOS)"
+
+      # Host build scripts / proc-macros need the macOS SDK (avoid iOS SDKROOT poison).
+      export MACOS_SDK=$(xcrun --sdk macosx --show-sdk-path 2>/dev/null || echo "$DEVELOPER_DIR/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk")
       export HOST_CC="/usr/bin/clang"
+      export HOST_CFLAGS="-isysroot $MACOS_SDK"
+      export HOST_LDFLAGS="-isysroot $MACOS_SDK"
+      export SDKROOT="$MACOS_SDK"
     '';
 
     buildPhase = ''

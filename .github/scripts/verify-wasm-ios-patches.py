@@ -22,6 +22,16 @@ def main() -> None:
     ):
         print("FAIL ios.nix must not enable cranelift-native", file=sys.stderr)
         sys.exit(1)
+    if "mach2-*/src/lib.rs" not in ios or 'target_os = "tvos"' not in ios:
+        print(
+            "FAIL ios.nix must patch vendored mach2 for tvOS/visionOS "
+            "(wasmtime pulls mach2 for all target_vendor=apple)",
+            file=sys.stderr,
+        )
+        sys.exit(1)
+    if "SDKROOT=\"$MACOS_SDK\"" not in ios and 'SDKROOT="$MACOS_SDK"' not in ios:
+        print("FAIL ios.nix must reset SDKROOT to macOS for host builds", file=sys.stderr)
+        sys.exit(1)
     cargo = CARGO.read_text()
     if 'default-features = false' not in cargo:
         print("FAIL Cargo.toml wasmtime must disable default features", file=sys.stderr)
@@ -31,7 +41,7 @@ def main() -> None:
         print("FAIL lib.rs must force Config::target(pulley64) on the pulley feature",
               file=sys.stderr)
         sys.exit(1)
-    print("OK wwn-wasm iOS recipe is Pulley-only; cranelift-native is macOS-optional")
+    print("OK wwn-wasm iOS recipe is Pulley-only; mach2 Apple-OS patch present")
 
 
 if __name__ == "__main__":
