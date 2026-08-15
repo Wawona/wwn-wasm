@@ -1,6 +1,11 @@
-# wwn-wasm
+# wwn-wasm — Wawona Runtime (WASI P1/P2)
 
-In-process **WASI Preview 1 + Preview 2** runtime for Wawona.
+[![CI](https://github.com/Wawona/wwn-wasm/actions/workflows/ci.yml/badge.svg?branch=development)](https://github.com/Wawona/wwn-wasm/actions/workflows/ci.yml)
+[![Wawona Gate: wasm-wayland](https://github.com/Wawona/Wawona/actions/workflows/wasm-wayland.yml/badge.svg?branch=development)](https://github.com/Wawona/Wawona/actions/workflows/wasm-wayland.yml)
+[![Milestone](https://img.shields.io/badge/milestone-WASI_P1%2FP2-blue)](https://github.com/Wawona/Wawona/milestone/2)
+
+In-process **WASI Preview 1 + Preview 2** runtime for Wawona (the **Wawona
+Runtime**).
 
 Apple mobile uses Wasmtime **Pulley** (interpreter: WASM → Pulley IR → interpret;
 no native ARM, no `MAP_JIT`). macOS may use Cranelift. `.wasm` files are user
@@ -20,14 +25,27 @@ C ABI (`include/wawona_wasm.h`):
 Host extras (P1 import module `wawona_socket` / `wawona_terminal`):
 
 - POSIX TCP/UDP/unix + `connect_host`
-- `wawona_wayland_connect` / `shm_create` / `shm_send` (SCM_RIGHTS into the
-  existing compositor)
+- `wawona_wayland_connect` / `shm_create` / `shm_write` / `sendmsg`
+  (SCM_RIGHTS into the existing compositor)
 - TTY raw/cooked bit
 
 P2 guests use `wasi:cli` / `filesystem` / `sockets` / `clocks` / `random`.
 `wasi:http` is not linked yet (size); use sockets or a native port.
 
 Native ports stay first-class. WASM is the long-tail escape hatch.
+
+## CI
+
+| Check | Where |
+|---|---|
+| Pulley `cargo check` / sandbox tests / iOS recipe guard | this repo `ci.yml` |
+| Wayland SHM guest build + Weston headless smoke | this repo `ci.yml` (`wayland-smoke`) |
+| Wawona flake wiring + runtime↔compositor smoke | [Wawona **Gate: wasm-wayland**](https://github.com/Wawona/Wawona/actions/workflows/wasm-wayland.yml) |
+
+```bash
+# Local Wayland smoke (needs weston + rustup):
+./.github/scripts/smoke-wayland-shm.sh
+```
 
 Demos: [`examples/`](examples/README.md). The Wayland SHM client
 (`examples/wayland-shm`) compiles from **Rust, Go, or Swift** with that
