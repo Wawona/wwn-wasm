@@ -132,6 +132,23 @@ CARGO_EOF
       fi
       echo "Patched vendored mach2 cfgs for Apple mobile (tvOS/visionOS)"
 
+      # system-interface (via wasmtime-wasi) only treats macos|ios as Darwin for
+      # fadvise/FdFlags; tvOS/visionOS fall into the Linux posix_fadvise path and
+      # fail (no rustix::fs::Advice). Widen ios cfgs to the rest of the family.
+      si_found=0
+      for si in "$vendor_dir"/system-interface-*/src; do
+        if [ -d "$si" ]; then
+          find "$si" -name '*.rs' -exec sed -i \
+            's/target_os = "ios"/target_os = "ios", target_os = "tvos", target_os = "visionos", target_os = "watchos"/g' {} +
+          si_found=1
+        fi
+      done
+      if [ "$si_found" != 1 ]; then
+        echo "ERROR: vendored system-interface not found under $vendor_dir" >&2
+        exit 1
+      fi
+      echo "Patched vendored system-interface Darwin cfgs for Apple mobile"
+
       # Host build scripts / proc-macros need the macOS SDK (avoid iOS SDKROOT poison).
       export MACOS_SDK=$(xcrun --sdk macosx --show-sdk-path 2>/dev/null || echo "$DEVELOPER_DIR/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk")
       export HOST_CC="/usr/bin/clang"

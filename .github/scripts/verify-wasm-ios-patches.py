@@ -29,6 +29,13 @@ def main() -> None:
             file=sys.stderr,
         )
         sys.exit(1)
+    if "system-interface-*/src" not in ios:
+        print(
+            "FAIL ios.nix must patch vendored system-interface Darwin cfgs "
+            "(tvOS/visionOS otherwise take the Linux fadvise path)",
+            file=sys.stderr,
+        )
+        sys.exit(1)
     if "SDKROOT=\"$MACOS_SDK\"" not in ios and 'SDKROOT="$MACOS_SDK"' not in ios:
         print("FAIL ios.nix must reset SDKROOT to macOS for host builds", file=sys.stderr)
         sys.exit(1)
