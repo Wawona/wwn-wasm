@@ -1,0 +1,8 @@
+[package]
+name = "wayland-shm"
+version = "0.1.0"
+edition = "2021"
+
+[[bin]]
+name = "wayland-shm"
+path = "src/main.rs"

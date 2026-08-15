@@ -1,20 +1,28 @@
-# WASI demos for Wawona
+# WASI demos for the Wawona runtime
 
-Compile on a desktop, copy the `.wasm` into the Wawona Documents folder
-(Files / File Sharing / `scp`), then in the on-device shell:
+Compile on a desktop with **that language’s toolchain** (not Nix). Copy the
+`.wasm` into the Wawona Documents folder (Files / File Sharing / `scp`), then:
 
 ```text
 wasm ./tool.wasm hello
 ./tool.wasm hello
+wasm ./wayland-shm-rust.wasm
 ```
 
-| Dir | Target | Notes |
+| Dir | Toolchain (no Nix) | What it is |
 |---|---|---|
-| `rust/` | `wasm32-wasip1` | hello, fs-*, tcp-client (host `wawona_socket`) |
-| `go/` | `GOOS=wasip1` | hello, fs-* |
-| `swift/` | `wasm32-unknown-wasip1` | hello only; **no Foundation** |
-| `wasip2/` | `wasm32-wasip2` | `wasi:cli` hello |
-| `wayland-shm/` | `wasm32-wasip1` | host Wayland connect + SHM fd-bridge |
+| `rust/` | `rustup` + `cargo` / `wasm32-wasip1` | CLI: hello, fs-*, tcp-client |
+| `go/` | Go 1.21+ `GOOS=wasip1 GOARCH=wasm` | CLI: hello, fs-* |
+| `swift/` | Swift 6.2+ + wasm SDK, **no Foundation** | CLI: hello |
+| `wasip2/` | `rustup` + `cargo` / `wasm32-wasip2` | `wasi:cli` hello |
+| **`wayland-shm/`** | rust **or** go **or** swift | **Real Wayland client** (`wl_shm` + xdg) |
+
+```bash
+# Wayland client — pick a language
+./wayland-shm/rust/build.sh
+./wayland-shm/go/build.sh
+./wayland-shm/swift/build.sh
+```
 
 Native ports stay first-class. Prefer `weston-simple-shm` / `foot` when we
 have a recipe. See `Wawona/docs/wasm-wasi.md`.

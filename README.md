@@ -29,4 +29,6 @@ P2 guests use `wasi:cli` / `filesystem` / `sockets` / `clocks` / `random`.
 
 Native ports stay first-class. WASM is the long-tail escape hatch.
 
-Demos: [`examples/`](examples/README.md).
+Demos: [`examples/`](examples/README.md). The Wayland SHM client
+(`examples/wayland-shm`) compiles from **Rust, Go, or Swift** with that
+language’s toolchain — no Nix.

@@ -5,3 +5,7 @@ Cargo.lock.orig
 result
 result-*
 .DS_Store
+examples/**/target
+examples/**/.build
+examples/**/dist
+examples/**/.swiftpm

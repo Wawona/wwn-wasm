@@ -114,6 +114,12 @@ pub fn add_host_imports(linker: &mut wasmtime::Linker<crate::p1::P1State>) -> an
         linker.func_wrap(module, "wawona_wayland_shm_send", |_c: wasmtime::Caller<'_, crate::p1::P1State>, wl_fd: i32, shm_fd: i32| -> i32 {
             wayland_shm_send(wl_fd, shm_fd)
         })?;
+        linker.func_wrap(module, "wawona_wayland_shm_write", |mut caller: wasmtime::Caller<'_, crate::p1::P1State>, shm_fd: i32, offset: i32, buf: i32, len: i32| -> i32 {
+            wayland_shm_write(&mut caller, shm_fd, offset, buf as u32, len as u32)
+        })?;
+        linker.func_wrap(module, "wawona_wayland_sendmsg", |mut caller: wasmtime::Caller<'_, crate::p1::P1State>, wl_fd: i32, buf: i32, len: i32, scm_fd: i32| -> i32 {
+            wayland_sendmsg(&mut caller, wl_fd, buf as u32, len as u32, scm_fd)
+        })?;
     }
     for module in ["wawona_terminal", "env"] {
         linker.func_wrap(module, "wawona_terminal_set_raw", |_c: wasmtime::Caller<'_, crate::p1::P1State>, enabled: i32| -> i32 {
@@ -301,6 +307,115 @@ fn wayland_shm_create(caller: &mut wasmtime::Caller<'_, crate::p1::P1State>, siz
         Ok(mem) => write_i32(mem, fd_out, fd),
         Err(e) => e,
     }
+}
+
+fn wayland_shm_write(
+    caller: &mut wasmtime::Caller<'_, crate::p1::P1State>,
+    shm_fd: i32,
+    offset: i32,
+    buf: u32,
+    len: u32,
+) -> i32 {
+    if offset < 0 {
+        return EINVAL;
+    }
+    let mem = match caller.get_export("memory").and_then(|e| e.into_memory()) {
+        Some(m) => m,
+        None => return EIO,
+    };
+    let data = mem.data(&mut *caller);
+    let start = buf as usize;
+    let end = match start.checked_add(len as usize) {
+        Some(e) => e,
+        None => return EINVAL,
+    };
+    let bytes = match data.get(start..end) {
+        Some(b) => b.to_vec(),
+        None => return EINVAL,
+    };
+    let mut table = socks().lock().unwrap_or_else(|e| e.into_inner());
+    match table.map.get_mut(&shm_fd) {
+        Some(Sock::File(f)) => {
+            use std::io::{Seek, SeekFrom};
+            if f.seek(SeekFrom::Start(offset as u64)).is_err() {
+                return EIO;
+            }
+            if f.write_all(&bytes).is_err() {
+                return EIO;
+            }
+            0
+        }
+        _ => EBADF,
+    }
+}
+
+fn wayland_sendmsg(
+    caller: &mut wasmtime::Caller<'_, crate::p1::P1State>,
+    wl_fd: i32,
+    buf: u32,
+    len: u32,
+    scm_fd: i32,
+) -> i32 {
+    let mem = match caller.get_export("memory").and_then(|e| e.into_memory()) {
+        Some(m) => m,
+        None => return EIO,
+    };
+    let data = mem.data(&mut *caller);
+    let start = buf as usize;
+    let end = match start.checked_add(len as usize) {
+        Some(e) => e,
+        None => return EINVAL,
+    };
+    let mut bytes = match data.get(start..end) {
+        Some(b) => b.to_vec(),
+        None => return EINVAL,
+    };
+    let table = socks().lock().unwrap_or_else(|e| e.into_inner());
+    let wl_raw = match table.map.get(&wl_fd) {
+        Some(Sock::Unix(s)) => s.as_raw_fd(),
+        _ => return EBADF,
+    };
+    let scm_raw = if scm_fd >= 0 {
+        match table.map.get(&scm_fd) {
+            Some(Sock::File(f)) => Some(f.as_raw_fd()),
+            _ => return EBADF,
+        }
+    } else {
+        None
+    };
+    drop(table);
+    sendmsg_bytes(wl_raw, &mut bytes, scm_raw)
+}
+
+fn sendmsg_bytes(wl_raw: RawFd, bytes: &mut [u8], scm_raw: Option<RawFd>) -> i32 {
+    unsafe {
+        let mut iov = libc::iovec {
+            iov_base: bytes.as_mut_ptr() as *mut _,
+            iov_len: bytes.len(),
+        };
+        let mut cmsg_buf = [0u8; 64];
+        let mut msg: libc::msghdr = std::mem::zeroed();
+        msg.msg_iov = &mut iov;
+        msg.msg_iovlen = 1;
+        if let Some(shm_raw) = scm_raw {
+            msg.msg_control = cmsg_buf.as_mut_ptr() as *mut _;
+            msg.msg_controllen = cmsg_buf.len() as _;
+            let cmsg = libc::CMSG_FIRSTHDR(&msg);
+            if cmsg.is_null() {
+                return EIO;
+            }
+            (*cmsg).cmsg_level = libc::SOL_SOCKET;
+            (*cmsg).cmsg_type = libc::SCM_RIGHTS;
+            (*cmsg).cmsg_len = libc::CMSG_LEN(std::mem::size_of::<RawFd>() as u32) as _;
+            let data = libc::CMSG_DATA(cmsg) as *mut RawFd;
+            *data = shm_raw;
+            msg.msg_controllen = (*cmsg).cmsg_len;
+        }
+        if libc::sendmsg(wl_raw, &msg, 0) < 0 {
+            return EACCES;
+        }
+    }
+    0
 }
 
 fn wayland_shm_send(wl_fd: i32, shm_fd: i32) -> i32 {
