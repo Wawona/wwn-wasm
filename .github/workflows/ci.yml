@@ -10,6 +10,13 @@ permissions:
   id-token: write
 
 jobs:
+  readme-badge:
+    name: README CI badge
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - name: README has CI status badge
+        run: grep -E 'actions/workflows/.+/badge\.svg' README.md
   cargo:
     name: cargo check + test (Pulley)
     runs-on: ubuntu-latest
