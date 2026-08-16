@@ -8,6 +8,11 @@ alwaysApply: true
 **Wawona Runtime is always App Store / Play compliant.** There is **no Mode B
 Runtime**, no JIT Runtime flavor, and no jailbreak-only Runtime build.
 
+**Wasm is not platform-native** (tradeoff vs a Mach-O port). Document that
+honestly: the payoff is a **portable** Runtime + **`wpm`** (WASI P1/P2) that
+developers and users can target once under full store compliance. Prefer a
+native in-process port when we ship one; do not pretend Wasm is native.
+
 ## You own
 
 - WASI P1/P2 / Component Model host (`wwn-wasm`)
