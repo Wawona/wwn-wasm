@@ -87,7 +87,7 @@ pub fn cli_run(args: &[String]) -> Result<i32> {
                 let client = crate::registry::RegistryClient::from_env_or_default()?;
                 let hits = client.search(q)?;
                 if hits.is_empty() {
-                    println!("(no matches — is {DEFAULT_REGISTRY}/index.json published?)");
+                    println!("(no matches - is {DEFAULT_REGISTRY}/index.json published?)");
                 } else {
                     println!("{:<24} {:<12} {}", "NAME", "VERSION", "SUMMARY");
                     for p in hits {
@@ -153,7 +153,7 @@ fn split_name_ver(spec: &str) -> (&str, Option<&str>) {
 
 fn print_help(argv0: &str) {
     println!(
-        "wpm — Wawona Runtime package manager (WASI .wasm)\n\
+        "wpm - Wawona Runtime package manager (WASI .wasm)\n\
          \n\
          Usage: {argv0} <command>\n\
          \n\
@@ -168,7 +168,7 @@ fn print_help(argv0: &str) {
          \n\
          Store:  ${STORE_ENV} or ~/Library/Application Support/Wawona/wasm-packages\n\
          Registry (Mode A only): ${REGISTRY_ENV} default {DEFAULT_REGISTRY}\n\
-         Jailbreak .deb APT is a different channel — never used by wpm.\n\
+         Jailbreak .deb APT is a different channel - never used by wpm.\n\
          Run packages:  wasm <name>   (Runtime resolves installed names)\n"
     );
 }

@@ -32,6 +32,24 @@ jobs:
       - name: test (sandbox)
         run: cargo test --no-default-features --features pulley --lib
 
+  runtime-wpm:
+    name: Runtime + wpm smoke (Go WASI)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.22"
+      - name: smoke-runtime-wpm
+        run: |
+          chmod +x ./.github/scripts/smoke-runtime-wpm.sh
+          cargo build -p wawona-wasm --bin wasm --no-default-features --features cranelift-native
+          cargo build -p wpm --bin wpm --features cli,registry
+          export WASM_BIN="$PWD/target/debug/wasm"
+          export WPM_BIN="$PWD/target/debug/wpm"
+          ./.github/scripts/smoke-runtime-wpm.sh
+
   wayland-guest:
     name: build wayland-shm guest (Rust)
     runs-on: ubuntu-latest

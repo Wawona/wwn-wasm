@@ -36,7 +36,7 @@ Native ports stay first-class. WASM is the long-tail escape hatch.
 
 ## Package manager (`wpm`)
 
-Sibling crate [`crates/wpm`](crates/wpm) — Mode A Runtime packages for **all**
+Sibling crate [`crates/wpm`](crates/wpm). Mode A Runtime packages for **all**
 targets (shell + Files sideload + `repo.wawona.io/wasm`):
 
 ```text
@@ -47,7 +47,13 @@ wasm hello                  # Runtime resolves installed package names
 ```
 
 C ABI: `wpm_main` (weak in `wawona-dispatch`). Jailbreak `.deb` APT is a
-different channel — `wpm` refuses those URLs.
+different channel. `wpm` refuses those URLs.
+
+Local smoke (Go or rustup):
+
+```bash
+./.github/scripts/smoke-runtime-wpm.sh
+```
 
 Plan: [wasm-package-manager.md](https://github.com/Wawona/Wawona/blob/development/docs/wasm-package-manager.md).
 

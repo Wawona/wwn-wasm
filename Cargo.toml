@@ -1,5 +1,10 @@
 [workspace]
 members = [".", "crates/wpm"]
+exclude = [
+  "examples/rust",
+  "examples/wasip2",
+  "examples/wayland-shm/rust",
+]
 resolver = "2"
 
 [package]
@@ -28,11 +33,12 @@ cranelift-native = ["wasmtime/cranelift"]
 [dependencies]
 anyhow = "1"
 libc = "0.2"
-wpm = { path = "crates/wpm", default-features = false }
+wpm = { path = "crates/wpm", default-features = false, features = ["cli"] }
 wasmtime = { version = "33", default-features = false, features = [
   "runtime",
   "component-model",
   "gc",
+  "gc-drc",
   "std",
 ] }
 wasmtime-wasi = { version = "33", default-features = false, features = [
