@@ -29,7 +29,8 @@ fn engine() -> Result<Engine> {
 }
 
 pub fn run_args(args: &[String]) -> Result<i32> {
-    let path = ffi::path_from_c_args(args).context("usage: wasm <file.wasm> [args…]")?;
+    let path = ffi::path_from_c_args(args).context("usage: wasm <file.wasm|package> [args…]")?;
+    let path = resolve_wasm_path(&path)?;
     if !path.is_file() {
         bail!("not a file: {}", path.display());
     }
@@ -42,6 +43,29 @@ pub fn run_args(args: &[String]) -> Result<i32> {
         args.to_vec()
     };
     run_path(&path, &guest_args)
+}
+
+/// Resolve `./file.wasm`, absolute paths, or an installed `wpm` package name.
+fn resolve_wasm_path(path: &Path) -> Result<std::path::PathBuf> {
+    if path.is_file() {
+        return Ok(path.to_path_buf());
+    }
+    let name = path
+        .file_name()
+        .and_then(|s| s.to_str())
+        .unwrap_or_else(|| path.to_str().unwrap_or(""));
+    if name.is_empty() || name.contains('.') && !name.ends_with(".wasm") {
+        bail!("not a file: {}", path.display());
+    }
+    // Package names are bare identifiers (no slash).
+    if path.components().count() == 1 {
+        if let Ok(store) = wpm::PackageStore::open_default() {
+            if let Ok(p) = store.resolve_wasm(name) {
+                return Ok(p);
+            }
+        }
+    }
+    bail!("not a file or installed package: {}", path.display())
 }
 
 pub fn run_path(path: &Path, args: &[String]) -> Result<i32> {

@@ -34,6 +34,23 @@ P2 guests use `wasi:cli` / `filesystem` / `sockets` / `clocks` / `random`.
 
 Native ports stay first-class. WASM is the long-tail escape hatch.
 
+## Package manager (`wpm`)
+
+Sibling crate [`crates/wpm`](crates/wpm) — Mode A Runtime packages for **all**
+targets (shell + Files sideload + `repo.wawona.io/wasm`):
+
+```text
+wpm install ./tool.wasm     # local / Files.app
+wpm install hello           # https://repo.wawona.io/wasm/v1
+wpm list | search | remove
+wasm hello                  # Runtime resolves installed package names
+```
+
+C ABI: `wpm_main` (weak in `wawona-dispatch`). Jailbreak `.deb` APT is a
+different channel — `wpm` refuses those URLs.
+
+Plan: [wasm-package-manager.md](https://github.com/Wawona/Wawona/blob/development/docs/wasm-package-manager.md).
+
 ## CI
 
 | Check | Where |

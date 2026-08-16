@@ -1,3 +1,7 @@
+[workspace]
+members = [".", "crates/wpm"]
+resolver = "2"
+
 [package]
 name = "wawona-wasm"
 version = "0.1.0"
@@ -18,16 +22,13 @@ path = "src/bin/wasm.rs"
 
 [features]
 default = ["pulley"]
-# Apple mobile / Android: compile WASM → Pulley IR (needs the cranelift
-# frontend) then interpret. Config::target("pulley64") prevents native ARM.
 pulley = ["wasmtime/pulley", "wasmtime/cranelift"]
-# macOS host Cranelift (native). Do not use this feature on iphoneos recipes.
 cranelift-native = ["wasmtime/cranelift"]
 
 [dependencies]
 anyhow = "1"
 libc = "0.2"
-# default-features off: no Cranelift native, no cache, no parallel compile.
+wpm = { path = "crates/wpm", default-features = false }
 wasmtime = { version = "33", default-features = false, features = [
   "runtime",
   "component-model",
@@ -42,5 +43,4 @@ wasmtime-wasi = { version = "33", default-features = false, features = [
 opt-level = 2
 lto = false
 codegen-units = 1
-# Never abort: catch_unwind at the C ABI (same as phoon_main).
 panic = "unwind"
