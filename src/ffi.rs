@@ -69,6 +69,15 @@ pub extern "C" fn wawona_terminal_raw_enabled() -> c_int {
     crate::host::terminal_raw_enabled()
 }
 
+/// Keep `wpm_main` in `libwawona_wasm.a`.
+///
+/// Wawona xcodegen passes `-Wl,-u,_wpm_main` with lazy `-lwawona_wasm` so
+/// `wawona-dispatch` can call in-process `wpm`. Without a root-crate reference,
+/// rustc GC drops the symbol from the staticlib and macOS/iOS link fails with
+/// `Undefined symbol: _wpm_main`.
+#[used]
+static KEEP_WPM_MAIN: unsafe extern "C" fn(c_int, *const *const c_char) -> c_int = wpm::ffi::wpm_main;
+
 pub fn path_from_c_args(args: &[String]) -> Option<PathBuf> {
     wasm_path_from_args(args)
 }
