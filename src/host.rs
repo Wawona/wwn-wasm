@@ -268,6 +268,9 @@ fn wayland_connect(caller: &mut wasmtime::Caller<'_, crate::p1::P1State>, fd_out
     let path = format!("{xdg}/{display}");
     match std::os::unix::net::UnixStream::connect(&path) {
         Ok(s) => {
+            // Leave blocking by default. The guest paints after each event so a
+            // blocking recv still handles configure / input. Nonblocking can be
+            // enabled later once SCM_RIGHTS + poll are proven together.
             let mut table = socks().lock().unwrap_or_else(|e| e.into_inner());
             let fd = table.insert(Sock::Unix(s));
             drop(table);

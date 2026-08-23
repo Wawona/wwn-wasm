@@ -1,8 +1,12 @@
 # wayland-shm — Wawona runtime WASM client
 
-Same **Wayland** client in Rust, Go, and Swift: `wl_compositor` + `xdg_wm_base`
-+ `wl_shm` (256×256 XRGB8888). Speaks the real protocol into Wawona’s existing
+Same **Wayland** client family in Rust, Go, and Swift: `wl_compositor` +
+`xdg_wm_base` + `wl_shm`. Speaks the real protocol into Wawona’s existing
 compositor. Host ABI is only unix connect + SCM_RIGHTS.
+
+The **Rust** build is the interactive demo (bitmap text, resize, pointer
+clicks / checkbox, keyboard typing via `wl_seat`). Go / Swift stay on the
+solid-rectangle path for smaller modules.
 
 **No Nix.** Each `build.sh` uses that language’s normal toolchain.
 
