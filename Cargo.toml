@@ -33,7 +33,9 @@ cranelift-native = ["wasmtime/cranelift"]
 [dependencies]
 anyhow = "1"
 libc = "0.2"
-wpm = { path = "crates/wpm", default-features = false, features = ["cli"] }
+# cli + registry: Mode A HTTPS client for repo.wawona.io/wasm (iOS in-process
+# wpm_main and macOS staticlib both need search/install by name).
+wpm = { path = "crates/wpm", default-features = false, features = ["cli", "registry"] }
 wasmtime = { version = "33", default-features = false, features = [
   "runtime",
   "component-model",
