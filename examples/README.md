@@ -15,10 +15,12 @@ wasm ./wayland-shm-rust.wasm
 | `go/` | Go 1.21+ `GOOS=wasip1 GOARCH=wasm` | CLI: hello, fs-* |
 | `swift/` | Swift 6.2+ + wasm SDK, **no Foundation** | CLI: hello |
 | `wasip2/` | `rustup` + `cargo` / `wasm32-wasip2` | `wasi:cli` hello |
+| **`hello-wasi-gui/`** | rust / `wasm32-wasip1` | Minimal Wayland hello (`wl_shm` + xdg; no seat) |
 | **`wayland-shm/`** | rust **or** go **or** swift | **Real Wayland client** (`wl_shm` + xdg; Rust: seat + soft UI) |
 
 ```bash
-# Wayland client — pick a language
+# Wayland hello (smoke) and interactive demo
+./hello-wasi-gui/rust/build.sh
 ./wayland-shm/rust/build.sh
 ./wayland-shm/go/build.sh
 ./wayland-shm/swift/build.sh
