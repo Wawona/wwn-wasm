@@ -35,7 +35,13 @@ pub fn run(engine: &Engine, path: &std::path::Path, args: &[String]) -> Result<i
 
     let root = sandbox::sandbox_root();
     let mut builder = WasiCtxBuilder::new();
-    builder.inherit_stdio();
+    builder.inherit_stdin();
+    builder.inherit_stdout();
+    if std::env::var_os("WAWONA_PTY_FAKE_TTY").is_some() {
+        builder.stderr(wasmtime_wasi::p2::stdout());
+    } else {
+        builder.inherit_stderr();
+    }
     builder.inherit_env();
     builder.args(args);
     builder.env("HOME", "/");

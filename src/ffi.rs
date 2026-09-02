@@ -53,11 +53,21 @@ pub unsafe extern "C" fn wawona_wasm_run(argc: c_int, argv: *const *const c_char
     match std::panic::catch_unwind(|| crate::run_args(&args)) {
         Ok(Ok(code)) => code,
         Ok(Err(e)) => {
-            eprintln!("wawona-wasm: {e:#}");
+            // On Apple-mobile fake-TTY shells, host STDERR is the app log.
+            // Print runtime errors on stdout so they reach weston-terminal.
+            if std::env::var_os("WAWONA_PTY_FAKE_TTY").is_some() {
+                println!("wawona-wasm: {e:#}");
+            } else {
+                eprintln!("wawona-wasm: {e:#}");
+            }
             127
         }
         Err(_) => {
-            eprintln!("wawona-wasm: panic in interpreter");
+            if std::env::var_os("WAWONA_PTY_FAKE_TTY").is_some() {
+                println!("wawona-wasm: panic in interpreter");
+            } else {
+                eprintln!("wawona-wasm: panic in interpreter");
+            }
             127
         }
     }

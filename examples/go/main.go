@@ -8,7 +8,9 @@ import (
 
 func main() {
 	args := os.Args
-	cmd := "help"
+	// Default to hello so `wasm hello-wasi` is a useful smoke (stdout).
+	// Extra subcommands stay available for fs-* / escape tests.
+	cmd := "hello"
 	if len(args) > 1 {
 		cmd = args[1]
 	}

@@ -23,7 +23,17 @@ pub fn run(engine: &Engine, path: &std::path::Path, args: &[String]) -> Result<i
 
     let root = sandbox::sandbox_root();
     let mut builder = WasiCtxBuilder::new();
-    builder.inherit_stdio();
+    // iOS/tvOS/watchOS in-process shell wires host STDOUT to the PTY and host
+    // STDERR to the app log (so NSLog does not spam weston-terminal). Guest
+    // CLI usage/errors go to stderr by convention; mirror them onto stdout
+    // when the fake-TTY shell is active so they are visible.
+    builder.inherit_stdin();
+    builder.inherit_stdout();
+    if std::env::var_os("WAWONA_PTY_FAKE_TTY").is_some() {
+        builder.stderr(wasmtime_wasi::p2::stdout());
+    } else {
+        builder.inherit_stderr();
+    }
     builder.inherit_env();
     builder.args(args);
     builder.env("HOME", "/");
