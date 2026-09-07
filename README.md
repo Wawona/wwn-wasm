@@ -37,12 +37,13 @@ Native ports stay first-class. WASM is the long-tail escape hatch.
 ## Package manager (`wpm`)
 
 Sibling crate [`crates/wpm`](crates/wpm). Mode A Runtime packages for **all**
-targets (shell + Files sideload + `repo.wawona.io/wasm`):
+targets (shell + Files sideload + [`repo.wawona.io/wasm/v1`](https://repo.wawona.io/wasm/v1)):
 
 ```text
 wpm install ./tool.wasm     # local / Files.app
 wpm install hello           # https://repo.wawona.io/wasm/v1
 wpm list | search | remove
+# web catalog (same index): https://repo.wawona.io/search/?channel=wasm
 wasm hello                  # Runtime resolves installed package names
 ```
 
