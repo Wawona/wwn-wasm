@@ -55,6 +55,8 @@
         } // (if isDarwin then {
           wawona-wasm-macos = host;
           wawona-wasm-ios = tc.buildForIOS "wawona-wasm" { };
+          wawona-wasm-watchos = tc.buildForWatchOS "wawona-wasm" { };
+          wawona-wasm-watchos-sim = tc.buildForWatchOS "wawona-wasm" { simulator = true; };
         } else {
           wawona-wasm-linux = host;
         })

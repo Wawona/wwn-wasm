@@ -57,15 +57,6 @@ let
     rustc = rustToolchain;
   };
 in
-# watchOS: size-gated off (same as coreutils). Produce an empty archive so
-# recipes exist, but do not compile Wasmtime.
-if isWatchOS then
-  pkgs.runCommand "wawona-wasm-watchos-off" { } ''
-    mkdir -p $out/lib $out/include
-    echo "watchOS: wwn-wasm is size-gated off" > $out/README.txt
-    # No libwawona_wasm.a — dispatch stays weak-NULL.
-  ''
-else
   myRustPlatform.buildRustPackage {
     pname = "wawona-wasm";
     version = "0.1.0";
@@ -106,8 +97,8 @@ CARGO_EOF
       export "CARGO_TARGET_''${target_underscore^^}_LINKER"="$XCODE_CLANG"
 
       # wasmtime depends on mach2 for all target_vendor=apple, but mach2 0.4.3
-      # only allows target_os macos|ios. Extend to tvOS/visionOS (watch is
-      # size-gated off above). Same vendor-edit pattern as niri's wayland-backend.
+      # only allows target_os macos|ios. Extend to the whole Apple family.
+      # Same vendor-edit pattern as niri's wayland-backend.
       vendor_dir="$NIX_BUILD_TOP/cargo-vendor-dir"
       apple_os_cfg='any(target_os = "macos", target_os = "ios", target_os = "tvos", target_os = "visionos", target_os = "watchos")'
       mach2_found=0
@@ -130,7 +121,7 @@ CARGO_EOF
         echo "ERROR: vendored mach2 not found under $vendor_dir" >&2
         exit 1
       fi
-      echo "Patched vendored mach2 cfgs for Apple mobile (tvOS/visionOS)"
+      echo "Patched vendored mach2 cfgs for Apple mobile (tvOS/visionOS/watchOS)"
 
       # system-interface (via wasmtime-wasi) only treats macos|ios as Darwin for
       # fadvise/FdFlags; tvOS/visionOS fall into the Linux posix_fadvise path and

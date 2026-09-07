@@ -29,3 +29,7 @@ wasm hello-wasi-gui   # if wpm wires PATH / package run
 
 Requires a live `WAYLAND_DISPLAY` (start a machine with a compositor or run
 under nested weston / Wawona host Wayland).
+
+Wawona ships this module as `hello-wasi-gui.wasm` in every product bundle
+(Apple Watch included). Machines Start on `wawona-wasm` with an empty path
+runs this file. That is the required WASI GUI smoke on every target.

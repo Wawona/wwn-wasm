@@ -262,8 +262,16 @@ fn socket_close(fd: i32) -> i32 {
     }
 }
 
+fn default_xdg_runtime_dir() -> String {
+    // Match Wawona compositor-host / macos-register-cli-bins (`/tmp/wawona-$UID`).
+    // Falling back to bare `/tmp` made host `wasm` miss the live socket when
+    // install never exported XDG_RUNTIME_DIR into the interactive shell.
+    let uid = unsafe { libc::getuid() };
+    format!("/tmp/wawona-{uid}")
+}
+
 fn wayland_connect(caller: &mut wasmtime::Caller<'_, crate::p1::P1State>, fd_out: u32) -> i32 {
-    let xdg = std::env::var("XDG_RUNTIME_DIR").unwrap_or_else(|_| "/tmp".into());
+    let xdg = std::env::var("XDG_RUNTIME_DIR").unwrap_or_else(|_| default_xdg_runtime_dir());
     let display = std::env::var("WAYLAND_DISPLAY").unwrap_or_else(|_| "wayland-0".into());
     let path = format!("{xdg}/{display}");
     match std::os::unix::net::UnixStream::connect(&path) {
@@ -287,7 +295,7 @@ fn wayland_shm_create(caller: &mut wasmtime::Caller<'_, crate::p1::P1State>, siz
     if size <= 0 {
         return EINVAL;
     }
-    let dir = std::env::var("XDG_RUNTIME_DIR").unwrap_or_else(|_| "/tmp".into());
+    let dir = std::env::var("XDG_RUNTIME_DIR").unwrap_or_else(|_| default_xdg_runtime_dir());
     let path = format!("{dir}/wwn-wasm-shm-{}-{}", std::process::id(), size);
     let file = match std::fs::OpenOptions::new()
         .read(true)
