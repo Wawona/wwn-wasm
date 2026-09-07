@@ -1,4 +1,9 @@
-# wwn-wasm — Wawona Runtime (WASI P1/P2)
+# wwn-wasm
+
+> **Moved.** New work lives in [Wawona Relay](https://github.com/Wawona/Relay).
+> Mode A WASI stays bytecode on `/wasm/v1`. L4 flake input is `wwn-relay`.
+
+# wwn-wasm (legacy): Wawona Runtime (WASI P1/P2)
 
 [![CI](https://github.com/Wawona/wwn-wasm/actions/workflows/ci.yml/badge.svg?branch=development)](https://github.com/Wawona/wwn-wasm/actions/workflows/ci.yml)
 [![Wawona Gate: wasm-wayland](https://github.com/Wawona/Wawona/actions/workflows/wasm-wayland.yml/badge.svg?branch=development)](https://github.com/Wawona/Wawona/actions/workflows/wasm-wayland.yml)
