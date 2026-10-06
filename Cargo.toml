@@ -47,6 +47,9 @@ wasmtime-wasi = { version = "33", default-features = false, features = [
   "preview1",
 ] }
 
+[dev-dependencies]
+wat = "1"
+
 [profile.release]
 opt-level = 2
 lto = false

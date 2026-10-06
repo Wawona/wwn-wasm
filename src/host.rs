@@ -245,13 +245,22 @@ fn socket_recv(caller: &mut wasmtime::Caller<'_, crate::p1::P1State>, fd: i32, b
         Some(m) => m,
         None => return EIO,
     };
-    let data = mem.data_mut(caller);
-    let start = buf as usize;
-    if start + n > data.len() {
-        return EINVAL;
+    let rc = {
+        let data = mem.data_mut(&mut *caller);
+        let start = buf as usize;
+        if start + n > data.len() {
+            return EINVAL;
+        }
+        data[start..start + n].copy_from_slice(&tmp[..n]);
+        write_i32(data, recv_out, n as i32)
+    };
+    // Refill only when the read made progress. The next guest stretch
+    // (event dispatch, SHM paint, a depth-3 search) gets a full burst.
+    // An EOF spin does not, so a closed socket still traps.
+    if n > 0 {
+        let _ = caller.set_fuel(crate::fuel::GUEST_BURST);
     }
-    data[start..start + n].copy_from_slice(&tmp[..n]);
-    write_i32(data, recv_out, n as i32)
+    rc
 }
 
 fn socket_close(fd: i32) -> i32 {

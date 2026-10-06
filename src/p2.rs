@@ -56,7 +56,7 @@ pub fn run(engine: &Engine, path: &std::path::Path, args: &[String]) -> Result<i
             wasi: builder.build(),
         },
     );
-    store.set_fuel(25_000_000).ok();
+    store.set_fuel(crate::fuel::GUEST_BURST).ok();
 
     let cmd = wasmtime_wasi::p2::bindings::sync::Command::instantiate(
         &mut store,
@@ -64,6 +64,7 @@ pub fn run(engine: &Engine, path: &std::path::Path, args: &[String]) -> Result<i
         &linker,
     )
     .context("instantiate wasi:cli/command")?;
+    store.set_fuel(crate::fuel::GUEST_BURST).ok();
     match cmd.wasi_cli_run().call_run(&mut store) {
         Ok(Ok(())) => Ok(0),
         Ok(Err(())) => Ok(1),

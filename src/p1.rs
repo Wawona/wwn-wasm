@@ -49,11 +49,14 @@ pub fn run(engine: &Engine, path: &std::path::Path, args: &[String]) -> Result<i
             wasi: builder.build_p1(),
         },
     );
-    store.set_fuel(25_000_000).ok();
+    // Load may spend fuel. Arm a fresh burst immediately before `_start`
+    // so the first Wayland frame is not paying for instantiation.
+    store.set_fuel(crate::fuel::GUEST_BURST).ok();
 
     let instance = linker
         .instantiate(&mut store, &module)
         .context("instantiate P1")?;
+    store.set_fuel(crate::fuel::GUEST_BURST).ok();
     let start = instance
         .get_typed_func::<(), ()>(&mut store, "_start")
         .context("missing _start")?;

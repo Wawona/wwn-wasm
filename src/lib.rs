@@ -2,6 +2,7 @@
 //! Cranelift optional on macOS only.
 
 pub mod ffi;
+pub mod fuel;
 pub mod host;
 pub mod p1;
 pub mod p2;
