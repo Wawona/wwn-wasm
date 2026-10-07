@@ -14,7 +14,9 @@ Runtime**).
 
 Apple mobile uses Wasmtime **Pulley** (interpreter: WASM → Pulley IR → interpret;
 no native ARM, no `MAP_JIT`). macOS may use Cranelift. `.wasm` files are user
-documents — Apple does not sign them.
+documents — Apple does not sign them. Fuel stays enabled. One guest burst is
+2e9 instructions, refilled after a Wayland `socket_recv` that returns bytes,
+so a frame or a short search fits and a pure wasm spin still traps.
 
 This is an L3′ repo: depends on `wwn-toolchain` only. See
 [wwn-repo-dag.md](https://github.com/Wawona/Wawona/blob/development/docs/wwn-repo-dag.md)
@@ -48,6 +50,8 @@ targets (shell + Files sideload + [`repo.wawona.io/wasm/v1`](https://repo.wawona
 wpm install ./tool.wasm     # local / Files.app
 wpm install hello           # https://repo.wawona.io/wasm/v1
 wpm list | search | remove
+wpm update | --update       # list upgrades (PTY: wpm --update --notify)
+wpm upgrade | --upgrade     # upgrade every registry package
 # web catalog (same index): https://repo.wawona.io/search/?channel=wasm
 wasm hello                  # Runtime resolves installed package names
 ```
